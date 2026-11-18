@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Temperaturas da semana</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #eef3fb;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+      background: radial-gradient(ellipse at top, #e1edff 0, #eef3fb 52%, #f6f8fc 100%);
+    }
+
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: clamp(20px, 5vw, 40px);
+      border: 1px solid #e5eaf2;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 20px 60px #19345a14;
+    }
+
+    h1 {
+      margin: 0;
+      color: #143b76;
+      font-size: clamp(1.7rem, 5vw, 2.25rem);
+      letter-spacing: -0.04em;
+    }
+
+    .introducao {
+      max-width: 62ch;
+      margin: 10px 0 28px;
+      color: #536174;
+      line-height: 1.6;
+    }
+
+    .temperaturas {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));
+      gap: 12px;
+      margin: 0 0 20px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-weight: 700;
+      color: #34445c;
+    }
+
+    input {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 48px;
+      padding: 11px 12px;
+      border: 1px solid #c8d2e0;
+      border-radius: 12px;
+      background: #fbfcfe;
+      color: #172033;
+      font: inherit;
+      font-size: 16px;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    input:focus-visible,
+    button:focus-visible {
+      outline: 3px solid #8bb9ff;
+      outline-offset: 2px;
+    }
+
+    input:focus {
+      border-color: #1769d2;
+      background: #fff;
+      box-shadow: 0 0 0 3px #1769d21a;
+    }
+
+    button {
+      min-height: 48px;
+      padding: 11px 18px;
+      border: 0;
+      border-radius: 12px;
+      color: #fff;
+      background: #155fc0;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: #104d9d;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    #mensagem {
+      min-height: 1.4em;
+      color: #b42318;
+      font-weight: 600;
+    }
+
+    #resumo {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0 0;
+    }
+
+    #resumo[hidden] {
+      display: none;
+    }
+
+    .resumo-item {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+      padding: 13px 15px;
+      border: 1px solid #dce8f8;
+      border-radius: 14px;
+      background: linear-gradient(145deg, #f8fbff, #f0f6ff);
+    }
+
+    .resumo-item span {
+      color: #64748b;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .resumo-item strong {
+      color: #173d73;
+      font-size: 1.1rem;
+    }
+
+    .grafico {
+      margin-top: 28px;
+      padding: clamp(16px, 4vw, 30px);
+      overflow: hidden;
+      border: 1px solid #dce5f1;
+      border-radius: 22px;
+      background:
+        radial-gradient(ellipse at 50% 30%, #f5f9ff 0, #fff 68%);
+      box-shadow: 0 10px 30px #19345a0a;
+    }
+
+    .grafico-cabecalho {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px 20px;
+      margin-bottom: 6px;
+    }
+
+    .grafico-cabecalho h2 {
+      color: #143b76;
+      font-size: clamp(1.2rem, 3vw, 1.45rem);
+    }
+
+    .selo-grafico {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid #dce8f8;
+      border-radius: 999px;
+      background: #f2f7ff;
+      color: #315783;
+      font-size: 0.78rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .selo-grafico::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #1769d2;
+      content: "";
+    }
+
+    h2 {
+      margin: 0;
+      color: #243650;
+      font-size: 1.15rem;
+    }
+
+    .descricao-grafico {
+      max-width: 66ch;
+      margin: 8px 0 0;
+      color: #536174;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .area-grafico {
+      display: grid;
+      justify-items: center;
+      margin: 6px 0 14px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      max-width: 640px;
+      height: clamp(280px, 72vw, 390px);
+      touch-action: manipulation;
+    }
+
+    .legenda {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 205px), 1fr));
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .legenda li {
+      min-width: 0;
+    }
+
+    .legenda-botao {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      width: 100%;
+      min-height: 62px;
+      padding: 10px 12px;
+      border: 1px solid #e3eaf3;
+      border-radius: 14px;
+      background: #fff;
+      color: #34445c;
+      text-align: left;
+      transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .legenda-botao:hover,
+    .legenda-botao:focus-visible {
+      border-color: #9cbce5;
+      background: #f7faff;
+      box-shadow: 0 5px 14px #19345a12;
+    }
+
+    .legenda-botao[aria-pressed="true"] {
+      border-color: #8db4e8;
+      background: #f1f7ff;
+      box-shadow: inset 0 0 0 1px #8db4e8, 0 5px 14px #19345a12;
+    }
+
+    .legenda-texto {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .legenda-dia {
+      color: #243650;
+      font-size: 0.91rem;
+      font-weight: 700;
+    }
+
+    .legenda-valor {
+      color: #64748b;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+
+    .legenda-cor {
+      flex: 0 0 14px;
+      width: 14px;
+      height: 34px;
+      border-radius: 7px;
+      box-shadow: inset 0 0 0 1px #17203312;
+    }
+
+    .detalhe-dia {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 4px 16px;
+      margin-top: 16px;
+      padding: 15px 17px;
+      border: 1px solid #dce8f8;
+      border-radius: 16px;
+      background: linear-gradient(115deg, #f2f7ff, #fbfdff);
+    }
+
+    .detalhe-dia span {
+      color: #536174;
+      font-size: 0.84rem;
+    }
+
+    #dia-selecionado {
+      color: #315783;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    #temperatura-selecionada {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      color: #143b76;
+      font-size: clamp(1.25rem, 4vw, 1.65rem);
+      white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+      #resumo {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding-right: max(12px, env(safe-area-inset-right));
+        padding-left: max(12px, env(safe-area-inset-left));
+      }
+
+      main {
+        padding: 22px 16px;
+        border-radius: 20px;
+      }
+
+      .introducao {
+        margin-bottom: 22px;
+      }
+
+      form > button {
+        width: 100%;
+      }
+
+      .grafico-cabecalho {
+        align-items: center;
+      }
+
+      canvas {
+        height: 285px;
+      }
+
+      .legenda {
+        grid-template-columns: 1fr;
+      }
+
+      .detalhe-dia {
+        padding: 13px 14px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Temperaturas da semana</h1>
+    <p class="introducao">Informe a temperatura de cada dia e explore a participação de cada um na variação semanal.</p>
+
+    <form id="formulario">
+      <div class="temperaturas">
+        <label for="segunda">Segunda-feira (°C)<input id="segunda" name="segunda" type="number" step="any" required></label>
+        <label for="terca">Terça-feira (°C)<input id="terca" name="terca" type="number" step="any" required></label>
+        <label for="quarta">Quarta-feira (°C)<input id="quarta" name="quarta" type="number" step="any" required></label>
+        <label for="quinta">Quinta-feira (°C)<input id="quinta" name="quinta" type="number" step="any" required></label>
+        <label for="sexta">Sexta-feira (°C)<input id="sexta" name="sexta" type="number" step="any" required></label>
+        <label for="sabado">Sábado (°C)<input id="sabado" name="sabado" type="number" step="any" required></label>
+        <label for="domingo">Domingo (°C)<input id="domingo" name="domingo" type="number" step="any" required></label>
+      </div>
+      <button type="submit">Gerar gráfico</button>
+    </form>
+
+    <p id="mensagem" role="alert"></p>
+    <section id="resumo" aria-label="Resumo das temperaturas" aria-live="polite" hidden></section>
+    <section class="grafico" aria-labelledby="titulo-grafico">
+      <div class="grafico-cabecalho">
+        <h2 id="titulo-grafico">Participação por dia</h2>
+        <span class="selo-grafico">Gráfico de pizza</span>
+      </div>
+      <p class="descricao-grafico" id="descricao-grafico">Preencha as temperaturas para comparar a variação de cada dia. Depois, toque em uma fatia ou escolha um dia na legenda para ver os detalhes.</p>
+      <div class="area-grafico">
+        <canvas id="grafico" role="img" aria-label="O gráfico de pizza será exibido depois que você informar as temperaturas." aria-describedby="descricao-grafico detalhe-dia">
+          Seu navegador não oferece suporte ao gráfico.
+        </canvas>
+      </div>
+      <ul class="legenda" id="legenda" aria-label="Legenda do gráfico"></ul>
+      <div class="detalhe-dia" id="detalhe-dia" aria-live="polite">
+        <span id="dia-selecionado">Dia selecionado</span>
+        <strong id="temperatura-selecionada">--</strong>
+        <span id="participacao-selecionada">Os detalhes aparecem aqui após gerar o gráfico.</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const dias = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+    const diasCompletos = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"];
+    const formulario = document.querySelector("#formulario");
+    const canvas = document.querySelector("#grafico");
+    const contexto = canvas.getContext("2d");
+    const mensagem = document.querySelector("#mensagem");
+    const resumo = document.querySelector("#resumo");
+    const descricaoGrafico = document.querySelector("#descricao-grafico");
+    const detalheDia = document.querySelector("#dia-selecionado");
+    const detalheTemperatura = document.querySelector("#temperatura-selecionada");
+    const detalheParticipacao = document.querySelector("#participacao-selecionada");
+    const legenda = document.querySelector("#legenda");
+    const cores = ["#1769d2", "#e05d44", "#7a55c7", "#138a72", "#d18a13", "#ce4f8b", "#47718f"];
+    let temperaturasAtuais = [];
+    let indiceSelecionado = null;
+    let indiceSobCursor = null;
+
+    const formatarTemperatura = (temperatura) =>
+      `${temperatura.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}°C`;
+
+    function obterDadosPizza(temperaturas) {
+      const menor = Math.min(...temperaturas);
+      const pesosOriginais = temperaturas.map((temperatura) => temperatura - menor);
+      const variacaoTotal = pesosOriginais.reduce((soma, peso) => soma + peso, 0);
+      const pesos = variacaoTotal === 0 ? temperaturas.map(() => 1) : pesosOriginais;
+      const total = pesos.reduce((soma, peso) => soma + peso, 0);
+
+      return {
+        pesos,
+        total,
+        participacoes: pesos.map((peso) => (peso / total) * 100),
+        variacaoTotal
+      };
+    }
+
+    function desenharGrafico(temperaturas) {
+      const largura = canvas.clientWidth;
+      const altura = canvas.clientHeight;
+      const escala = window.devicePixelRatio || 1;
+      canvas.width = largura * escala;
+      canvas.height = altura * escala;
+      contexto.setTransform(escala, 0, 0, escala, 0, 0);
+      contexto.clearRect(0, 0, largura, altura);
+
+      const dadosPizza = obterDadosPizza(temperaturas);
+      const centroX = largura / 2;
+      const centroY = altura / 2;
+      const raio = Math.max(40, Math.min(largura * 0.34, altura * 0.39));
+      let anguloInicial = -Math.PI / 2;
+      const indiceAtivo = indiceSobCursor ?? indiceSelecionado;
+
+      dadosPizza.pesos.forEach((peso, indice) => {
+        const tamanhoFatia = (peso / dadosPizza.total) * Math.PI * 2;
+        const anguloFinal = anguloInicial + tamanhoFatia;
+        const meioAngulo = (anguloInicial + anguloFinal) / 2;
+        const estaAtivo = indice === indiceAtivo;
+        const deslocamento = estaAtivo ? 6 : 0;
+        const x = centroX + Math.cos(meioAngulo) * deslocamento;
+        const y = centroY + Math.sin(meioAngulo) * deslocamento;
+
+        contexto.globalAlpha = indiceAtivo === null || estaAtivo ? 1 : 0.38;
+        contexto.beginPath();
+        contexto.moveTo(x, y);
+        contexto.arc(x, y, raio, anguloInicial, anguloFinal);
+        contexto.closePath();
+        contexto.fillStyle = cores[indice];
+        contexto.fill();
+        contexto.strokeStyle = "#fff";
+        contexto.lineWidth = 3;
+        contexto.stroke();
+        contexto.globalAlpha = 1;
+
+        if (tamanhoFatia > 0.48) {
+          const textoX = x + Math.cos(meioAngulo) * raio * 0.78;
+          const textoY = y + Math.sin(meioAngulo) * raio * 0.78;
+          const rotulo = `${dadosPizza.participacoes[indice].toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%`;
+          contexto.font = "700 11px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+          contexto.textAlign = "center";
+          contexto.textBaseline = "middle";
+          contexto.lineWidth = 3;
+          contexto.strokeStyle = "#17203366";
+          contexto.strokeText(rotulo, textoX, textoY);
+          contexto.fillStyle = "#fff";
+          contexto.fillText(rotulo, textoX, textoY);
+        }
+
+        anguloInicial = anguloFinal;
+      });
+
+      contexto.beginPath();
+      contexto.arc(centroX, centroY, raio * 0.56, 0, Math.PI * 2);
+      contexto.fillStyle = "#fff";
+      contexto.fill();
+      contexto.textAlign = "center";
+      contexto.textBaseline = "middle";
+      const media = temperaturas.reduce((soma, temperatura) => soma + temperatura, 0) / temperaturas.length;
+      const temperaturaCentral = indiceAtivo === null ? formatarTemperatura(media) : formatarTemperatura(temperaturas[indiceAtivo]);
+      const tituloCentral = indiceAtivo === null ? "MÉDIA" : dias[indiceAtivo].toLocaleUpperCase("pt-BR");
+
+      contexto.fillStyle = "#64748b";
+      contexto.font = "700 9px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      contexto.fillText(tituloCentral, centroX, centroY - 13);
+      contexto.fillStyle = "#173d73";
+      contexto.font = "700 15px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      contexto.fillText(temperaturaCentral, centroX, centroY + 5);
+      contexto.fillStyle = "#64748b";
+      contexto.font = "600 10px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      const participacaoCentral = indiceAtivo === null
+        ? `${temperaturas.length} DIAS`
+        : `${dadosPizza.participacoes[indiceAtivo].toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+      contexto.fillText(participacaoCentral, centroX, centroY + 20);
+      contexto.fillStyle = "#64748b";
+      contexto.font = "600 8px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      contexto.fillText(
+        indiceAtivo === null ? "NA SEMANA" : dadosPizza.variacaoTotal === 0 ? "PARTE IGUAL" : "DA VARIAÇÃO",
+        centroX,
+        centroY + 32
+      );
+
+      const criterio = dadosPizza.variacaoTotal === 0
+        ? "distribuição igual entre os dias, pois as temperaturas são iguais"
+        : "variação acima da menor temperatura semanal";
+      canvas.setAttribute(
+        "aria-label",
+        `Gráfico de pizza da ${criterio}: ${temperaturas.map((temperatura, indice) => `${dias[indice]} ${formatarTemperatura(temperatura)}, ${dadosPizza.participacoes[indice].toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`).join("; ")}.`
+      );
+    }
+
+    function atualizarLegendaPizza(temperaturas) {
+      const dadosPizza = obterDadosPizza(temperaturas);
+      legenda.replaceChildren(...temperaturas.map((temperatura, indice) => {
+        const item = document.createElement("li");
+        const botao = document.createElement("button");
+        const marcador = document.createElement("span");
+        const texto = document.createElement("span");
+        const dia = document.createElement("span");
+        const valor = document.createElement("span");
+        botao.className = "legenda-botao";
+        botao.type = "button";
+        botao.dataset.indice = String(indice);
+        botao.setAttribute("aria-pressed", String(indice === indiceSelecionado));
+        marcador.className = "legenda-cor";
+        marcador.style.backgroundColor = cores[indice];
+        marcador.setAttribute("aria-hidden", "true");
+        texto.className = "legenda-texto";
+        dia.className = "legenda-dia";
+        dia.textContent = diasCompletos[indice];
+        valor.className = "legenda-valor";
+        valor.textContent =
+          `${formatarTemperatura(temperatura)} · ` +
+          `${dadosPizza.participacoes[indice].toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% ` +
+          `${dadosPizza.variacaoTotal === 0 ? "parte igual" : "da variação"}`;
+        texto.append(dia, valor);
+        botao.append(marcador, texto);
+        item.append(botao);
+        botao.setAttribute(
+          "aria-label",
+          `${diasCompletos[indice]}, ${formatarTemperatura(temperatura)}, ` +
+          `${dadosPizza.participacoes[indice].toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% ` +
+          `${dadosPizza.variacaoTotal === 0 ? "em divisão visual igual" : "da variação semanal"}.`
+        );
+        return item;
+      }));
+
+      legenda.querySelectorAll(".legenda-botao").forEach((botao) => {
+        botao.addEventListener("click", () => {
+          selecionarDia(Number(botao.dataset.indice));
+        });
+        botao.addEventListener("pointerenter", () => atualizarPrevia(Number(botao.dataset.indice)));
+        botao.addEventListener("pointerleave", restaurarSelecao);
+        botao.addEventListener("focus", () => atualizarPrevia(Number(botao.dataset.indice)));
+        botao.addEventListener("blur", restaurarSelecao);
+      });
+
+      descricaoGrafico.textContent = dadosPizza.variacaoTotal === 0
+        ? "Todas as temperaturas são iguais. As fatias ficam divididas igualmente; selecione um dia para ver o valor."
+        : "Cada fatia representa a participação do dia na variação acima da menor temperatura da semana. Toque em uma fatia ou escolha um dia na legenda.";
+    }
+
+    function atualizarDetalhe(indice) {
+      if (indice === null || temperaturasAtuais.length !== 7) {
+        detalheDia.textContent = "Dia selecionado";
+        detalheTemperatura.textContent = "--";
+        detalheParticipacao.textContent = "Os detalhes aparecem aqui após gerar o gráfico.";
+        return;
+      }
+
+      const dadosPizza = obterDadosPizza(temperaturasAtuais);
+      detalheDia.textContent = diasCompletos[indice];
+      detalheTemperatura.textContent = formatarTemperatura(temperaturasAtuais[indice]);
+      detalheParticipacao.textContent = dadosPizza.variacaoTotal === 0
+        ? `Temperatura igual à dos outros dias · participação visual de ${dadosPizza.participacoes[indice].toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`
+        : `${dadosPizza.participacoes[indice].toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% da variação acima da mínima semanal`;
+    }
+
+    function atualizarPrevia(indice) {
+      if (temperaturasAtuais.length !== 7) return;
+      indiceSobCursor = indice;
+      desenharGrafico(temperaturasAtuais);
+      atualizarDetalhe(indice);
+    }
+
+    function restaurarSelecao() {
+      if (temperaturasAtuais.length !== 7) return;
+      indiceSobCursor = null;
+      desenharGrafico(temperaturasAtuais);
+      atualizarDetalhe(indiceSelecionado);
+    }
+
+    function selecionarDia(indice) {
+      indiceSelecionado = indice;
+      indiceSobCursor = null;
+      legenda.querySelectorAll(".legenda-botao").forEach((botao) => {
+        botao.setAttribute("aria-pressed", String(Number(botao.dataset.indice) === indice));
+      });
+      desenharGrafico(temperaturasAtuais);
+      atualizarDetalhe(indice);
+    }
+
+    function encontrarFatia(evento) {
+      if (temperaturasAtuais.length !== 7) return null;
+      const limites = canvas.getBoundingClientRect();
+      const escalaX = canvas.clientWidth / limites.width;
+      const escalaY = canvas.clientHeight / limites.height;
+      const x = (evento.clientX - limites.left) * escalaX;
+      const y = (evento.clientY - limites.top) * escalaY;
+      const centroX = canvas.clientWidth / 2;
+      const centroY = canvas.clientHeight / 2;
+      const raio = Math.max(40, Math.min(canvas.clientWidth * 0.34, canvas.clientHeight * 0.39));
+      const distancia = Math.hypot(x - centroX, y - centroY);
+
+      if (distancia < raio * 0.56 || distancia > raio) return null;
+
+      const dadosPizza = obterDadosPizza(temperaturasAtuais);
+      const angulo = (Math.atan2(y - centroY, x - centroX) + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
+      let acumulado = 0;
+
+      for (let indice = 0; indice < dadosPizza.pesos.length; indice += 1) {
+        const tamanhoFatia = (dadosPizza.pesos[indice] / dadosPizza.total) * Math.PI * 2;
+        if (tamanhoFatia > 0 && angulo < acumulado + tamanhoFatia) return indice;
+        acumulado += tamanhoFatia;
+      }
+
+      return null;
+    }
+
+    canvas.addEventListener("pointermove", (evento) => {
+      const indice = encontrarFatia(evento);
+      if (indice === indiceSobCursor) return;
+      indiceSobCursor = indice;
+      desenharGrafico(temperaturasAtuais);
+      atualizarDetalhe(indice ?? indiceSelecionado);
+    });
+
+    canvas.addEventListener("pointerleave", () => {
+      if (indiceSobCursor === null) return;
+      restaurarSelecao();
+    });
+
+    canvas.addEventListener("pointerdown", (evento) => {
+      const indice = encontrarFatia(evento);
+      if (indice !== null) selecionarDia(indice);
+    });
+
+    formulario.addEventListener("submit", (evento) => {
+      evento.preventDefault();
+      const campos = [...formulario.querySelectorAll("input")];
+      const temperaturas = campos.map((campo) => campo.valueAsNumber);
+
+      if (temperaturas.length !== 7 || temperaturas.some((temperatura) => !Number.isFinite(temperatura))) {
+        mensagem.textContent = "Informe uma temperatura válida para cada dia da semana.";
+        return;
+      }
+
+      mensagem.textContent = "";
+      temperaturasAtuais = temperaturas;
+      const media = temperaturas.reduce((soma, temperatura) => soma + temperatura, 0) / temperaturas.length;
+      const maior = Math.max(...temperaturas);
+      const menor = Math.min(...temperaturas);
+      const amplitude = maior - menor;
+      const itensResumo = [
+        ["Média semanal", formatarTemperatura(media)],
+        ["Máxima", formatarTemperatura(maior)],
+        ["Mínima", formatarTemperatura(menor)],
+        ["Amplitude", formatarTemperatura(amplitude)]
+      ];
+      resumo.replaceChildren(...itensResumo.map(([titulo, valor]) => {
+        const item = document.createElement("div");
+        const rotulo = document.createElement("span");
+        const conteudo = document.createElement("strong");
+        item.className = "resumo-item";
+        rotulo.textContent = titulo;
+        conteudo.textContent = valor;
+        item.append(rotulo, conteudo);
+        return item;
+      }));
+      resumo.hidden = false;
+      indiceSelecionado = temperaturas.indexOf(maior);
+      indiceSobCursor = null;
+      atualizarLegendaPizza(temperaturas);
+      desenharGrafico(temperaturas);
+      atualizarDetalhe(indiceSelecionado);
+    });
+
+    window.addEventListener("resize", () => {
+      if (temperaturasAtuais.length === 7) desenharGrafico(temperaturasAtuais);
+    });
+  </script>
+</body>
+</html>
